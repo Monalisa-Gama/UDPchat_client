@@ -87,7 +87,8 @@ def enviar_mensagens():
             elif mensagem.startswith('.sair '):
                 destinatario = mensagem[8:]
                 cliente_socket.sendto(mensagem.encode('utf-8'),(ipserver, portserver))
-            elif '_' in mensagem:
+            elif mensagem.startswith('.') and '_' in mensagem:
+                mensagem = mensagem[1:]
                 nome_destinatario, mensagem = mensagem.split('_', 1)
                 if nome_destinatario in enderecos_contatos:
                     print(nome_destinatario)

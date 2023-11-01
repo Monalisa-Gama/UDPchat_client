@@ -2,13 +2,13 @@ import socket
 import threading
 
 
-host = '10.0.0.20' # Endereço IP do seu computador
-porta = 12346
+host = '10.113.60.206' # Endereço IP do seu computador
+porta = 12345
 
-ipserver = '10.0.0.20'
+ipserver = '10.113.60.230'
 portserver = 12345
 
-contatos = [("Alice", "192.168.60.231"), ("Bob", "192.168.60.232"), ("Charlie", "192.168.60.233"),('Albert','10.113.60.207'),('Eu','10.113.60.206')]
+contatos = [('Albert','10.113.60.207'),('Eu','10.113.60.206')]
 
 
 socket_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

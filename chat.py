@@ -24,6 +24,8 @@ for contato in contatos:
 enderecos_contatos = {nome: ip for nome, ip in contatos}
 
 
+lock = threading.Lock()
+
 
 # Função para receber mensagens
 def receber_mensagens():
@@ -33,6 +35,9 @@ def receber_mensagens():
             dados, endereco = socket_server.recvfrom(1024) # Tamanho do buffer é 1024 bytes
             mensagem = dados.decode('utf-8')
             print(f"Recebido de {endereco[0]}:{endereco[1]}: {mensagem}")
+            if endereco[0]== ipserver:
+                atualizaLista(endereco,mensagem)
+            
         except UnicodeDecodeError:
             print(f"Recebido de {endereco[0]}:{endereco[1]}: Erro de decodificação (não UTF-8)")
 # Inicializa uma thread para receber mensagens
@@ -41,27 +46,25 @@ thread_recebimento.daemon = True
 thread_recebimento.start()
 
 
-def atualizaLista():
-    while True:
-        try:
-            dados, endereco = socket_server.recvfrom(1024)
-            mensagem = dados.decode('utf-8')
-            # Suponha que a lista de contatos seja enviada diretamente sem um prefixo específico
-            # Processar a lista de contatos recebida do servidor
-            contatos_strings = mensagem.split(',')
-            contatos.clear()  # Limpa o array de contatos existente
-            for contato_str in contatos_strings:
-                nome, ip = contato_str.split(':')
+def atualizaLista(endereco,mensagem):
+    
+    try:
+        contatos_strings = mensagem.split('\n')
+        contatos.clear()  
+        for contato_str in contatos_strings:
+            if contato_str:
+                print(contato_str.split(','))
+                nome, ip = contato_str.split(',')
                 contatos.append((nome, ip))
-            # Atualiza o dicionário de endereços de contatos
-            enderecos_contatos.clear()
-            enderecos_contatos.update(dict(contatos))
-            # Imprime os contatos atualizados
-            print("Contatos atualizados:")
-            for contato in contatos:
-                print(f"{contato[0]}: {contato[1]}")
-        except UnicodeDecodeError:
-            print(f"Recebido de {endereco[0]}:{endereco[1]}: Erro de decodificação (não UTF-8)")
+        
+        enderecos_contatos.clear()
+        enderecos_contatos.update(dict(contatos))
+        
+        print("Contatos atualizados:")
+        for contato in contatos:
+            print(f"{contato[0]}: {contato[1]}")
+    except UnicodeDecodeError:
+        print(f"Recebido de {endereco[0]}:{endereco[1]}: Erro de decodificação (não UTF-8)")
 
 def enviar_mensagens():
     cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -83,13 +86,14 @@ def enviar_mensagens():
             elif mensagem.startswith('.contatos'):
                 destinatario = mensagem[8:]
                 cliente_socket.sendto(mensagem.encode('utf-8'),(ipserver, portserver))
-                atualizaLista()
+                #atualizaLista()
             elif mensagem.startswith('.sair '):
                 destinatario = mensagem[8:]
                 cliente_socket.sendto(mensagem.encode('utf-8'),(ipserver, portserver))
             elif mensagem.startswith('.') and '_' in mensagem:
                 mensagem = mensagem[1:]
                 nome_destinatario, mensagem = mensagem.split('_', 1)
+
                 if nome_destinatario in enderecos_contatos:
                     print(nome_destinatario)
                     destino_ip = enderecos_contatos[nome_destinatario]
@@ -100,7 +104,7 @@ def enviar_mensagens():
 
 
             else:
-                # Enviar a mensagem para o professor no IP 192.168.60.230 na porta portserver
+                
                 cliente_socket.sendto(mensagem.encode('utf-8'), ("192.168.60.230", portserver))
 
 
@@ -112,6 +116,5 @@ thread_envio.join()
 print("Threads encerradas.")
 socket_server.close()
 print("Socket encerrado. Bye Bye")
-
 
 
